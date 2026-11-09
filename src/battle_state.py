@@ -338,7 +338,7 @@ def get_features_from_battle(battle, type_dict, species, features, known_types):
     features["state_ko_likely_balance"] = len(p2_likely_out) - len(p1["fainted"])
 
     # Recent KO counts
-    recent_ko = len(turns) - RECENT_TURNS    
+    recent_turn_start = len(turns) - RECENT_TURNS
     first_ko_turn = {}
     for index, turn in enumerate(turns):
         state = turn.get("p1_pokemon_state") or {}
@@ -347,13 +347,13 @@ def get_features_from_battle(battle, type_dict, species, features, known_types):
 
     recent_p1_ko = 0
     for index in first_ko_turn.values():
-        if index >= recent_ko:
+        if index >= recent_turn_start:
             recent_p1_ko += 1
     features["recent_p1_ko"] = recent_p1_ko
 
     recent_p2_likely_ko = 0
     for name, index in suspects["last_exit"].items():
-        if name in p2_likely_out and index >= recent_ko:
+        if name in p2_likely_out and index >= recent_turn_start:
             recent_p2_likely_ko += 1
     features["recent_p2_likely_ko"] = recent_p2_likely_ko
     features["recent_ko_balance"] = features["recent_p2_likely_ko"] - features["recent_p1_ko"]
@@ -454,7 +454,7 @@ def get_features_from_battle(battle, type_dict, species, features, known_types):
         active_hp_gap += a_hp - b_hp
 
         # HP gap and damage taken in the last 10 turns
-        if index >= recent_ko:
+        if index >= recent_turn_start:
             recent_hp_gap += a_hp - b_hp
 
             if index and p1["actives"][index - 1] == a_name:
@@ -472,7 +472,7 @@ def get_features_from_battle(battle, type_dict, species, features, known_types):
     features["matchup_balance"] = p1_type_adv_turns - p1_type_disadv_turns
     features["matchup_faster_turns"] = p1_faster_turns
     features["matchup_active_hp_gap_mean"] = active_hp_gap/ len(turns)
-    features["recent_active_hp_gap_mean"] = recent_hp_gap/ max(len(turns) - max(recent_ko, 0), 1)
+    features["recent_active_hp_gap_mean"] = recent_hp_gap/ max(len(turns) - max(recent_turn_start, 0), 1)
     features["recent_damage_balance"] = recent_p2_damage - recent_p1_damage
 
     # Count status conditions across each team
